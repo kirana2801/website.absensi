@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SMKN TAMBAKBOYO</title>
+    <style>
+        /* CSS tetap sama seperti kodinganmu sebelumnya */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Arial', sans-serif;
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #ffffff;
+        }
+
+        .login-container {
+            width: 100%;
+            max-width: 450px;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header-section {
+            margin-bottom: 20px;
+        }
+
+        .logo-container {
+            width: 150px;
+            margin: 0 auto 15px;
+            min-height: 50px;
+        }
+
+        .logo-container img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        .header-section h1 {
+            font-size: 24px;
+            color: #444;
+            letter-spacing: 2px;
+            margin-top: 10px;
+        }
+
+        .color-bar {
+            height: 6px;
+            width: 100%;
+            background: linear-gradient(to right, #0044cc 25%, #8eb2ff 25%, #8eb2ff 50%, #ffcc00 50%, #ffcc00 75%, #ffe066 75%);
+            margin: 20px 0;
+            border-radius: 10px;
+        }
+
+        .input-group {
+            margin-bottom: 8px;
+        }
+
+        input[type="text"], 
+        input[type="password"] {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ccc;
+            font-size: 16px;
+            outline: none;
+        }
+
+        .btn-login {
+            width: 100%;
+            padding: 12px;
+            margin-top: 15px;
+            background-color: #ffcc00;
+            color: #333;
+            border: none;
+            border-radius: 4px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .btn-clear {
+            width: 100%;
+            padding: 12px;
+            margin-top: 10px;
+            background-color: #008ba3;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 18px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="login-container">
+        <div class="header-section">
+            <div class="logo-container">
+                <img src="smkntambakboyo.png" alt="Logo SMKN Tambakboyo">
+            </div>
+            <h1>SMKN TAMBAKBOYO</h1>
+        </div>
+
+        <div class="color-bar"></div>
+
+        <form id="loginForm">
+            <div class="input-group">
+                <input type="text" id="username" placeholder="Username" required>
+            </div>
+            <div class="input-group">
+                <input type="password" id="password" placeholder="Password" required>
+            </div>
+
+            <button type="submit" class="btn-login">Login</button>
+            <button type="reset" class="btn-clear">Clear</button>
+        </form>
+
+        <div class="color-bar"></div>
+    </div>
+
+    <script>
+        // JAVASCRIPT UNTUK PINDAH HALAMAN
+        const loginForm = document.getElementById('loginForm');
+
+        loginForm.addEventListener('submit', function(event) {
+            // Mencegah form melakukan refresh halaman default
+            event.preventDefault();
+
+            // Kamu bisa menambahkan validasi di sini (misal user & pass harus admin)
+            // Untuk sekarang, kita langsung pindahkan ke halaman activity.html
+            window.location.href = "beranda.html"; 
+        });
+    </script>
+
+</body>
+</html>
