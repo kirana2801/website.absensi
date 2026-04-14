@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SMKN TAMBAKBOYO - Sistem Absensi</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        /* CSS DASAR */
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Arial', sans-serif; }
+        body { background-color: #f0f4f8; min-height: 100vh; display: flex; flex-direction: column; overflow-x: hidden; }
+
+        /* SIDEBAR */
+        .sidebar { position: fixed; left: -280px; top: 0; width: 280px; height: 100%; background-color: #4da1c9; transition: 0.3s; z-index: 1001; padding-top: 20px; box-shadow: 2px 0 5px rgba(0,0,0,0.2); }
+        .sidebar.active { left: 0; }
+        .sidebar-header { background-color: #6a419d; padding: 15px 20px; color: #ffcc00; font-weight: bold; font-size: 14px; text-transform: uppercase; margin-bottom: 10px; }
+        .sidebar-item { padding: 15px 20px; color: white; text-decoration: none; display: flex; align-items: center; font-size: 14px; font-weight: bold; border-bottom: 1px solid rgba(255,255,255,0.1); cursor: pointer; transition: 0.3s; }
+        .sidebar-item:hover { background-color: rgba(255,255,255,0.2); padding-left: 30px; }
+        .sidebar-item i { margin-right: 15px; width: 20px; text-align: center; font-size: 18px; }
+        
+        .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; }
+        .overlay.active { display: block; }
+
+        /* HEADER & NAVBAR */
+        .top-header { background-color: #6a419d; color: white; text-align: center; padding: 10px 0; font-size: 14px; text-transform: uppercase; font-weight: bold; }
+        .navbar { background-color: #4da1c9; padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; color: white; }
+        .menu-icon { font-size: 24px; cursor: pointer; }
+        .profile-pic { width: 35px; height: 35px; background-color: white; border-radius: 50%; overflow: hidden; border: 2px solid #ffcc00; display: flex; align-items: center; justify-content: center; }
+        .profile-pic img { width: 100%; height: 100%; object-fit: cover; }
+
+        /* KONTEN UTAMA */
+        .main-content { flex: 1; padding: 15px; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        /* CARDS */
+        .card { background: white; border-radius: 4px; margin-bottom: 20px; border-top: 3px solid #4da1c9; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .card-header { padding: 10px 15px; border-bottom: 1px solid #eee; font-weight: bold; color: #555; text-transform: uppercase; font-size: 12px; display: flex; justify-content: space-between; align-items: center; }
+        .card-body { padding: 15px; }
+
+        /* FORM */
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; color: #0044cc; font-weight: bold; font-size: 12px; margin-bottom: 5px; text-transform: uppercase; }
+        .form-group input, .form-group select { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 2px; font-size: 14px; outline: none; }
+
+        /* BUTTONS */
+        .btn-group { display: flex; gap: 10px; }
+        .btn { padding: 10px 15px; border: none; border-radius: 4px; color: white; cursor: pointer; font-weight: bold; text-transform: uppercase; font-size: 11px; transition: 0.2s; }
+        .btn-simpan { background-color: #1bad60; width: 100%; padding: 12px; font-size: 12px; }
+        .btn-masuk { background-color: #28a745; flex: 1; }
+        .btn-pulang { background-color: #dc3545; flex: 1; }
+        .btn-hapus { background-color: #ff4444; font-size: 10px; padding: 5px 10px; }
+
+        /* LOADING */
+        .loading-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.8); z-index: 2000; justify-content: center; align-items: center; flex-direction: column; }
+        .spinner { width: 45px; height: 45px; border: 5px solid #f3f3f3; border-top: 5px solid #4da1c9; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 10px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* TABEL */
+        .table-wrapper { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; font-size: 11px; margin-top: 10px; min-width: 450px; }
+        th { background-color: #f39c12; color: white; padding: 12px; text-align: center; border: 1px solid #ddd; text-transform: uppercase; }
+        td { padding: 12px; border: 1px solid #ddd; color: #555; background: #fff; vertical-align: middle; text-align: center; }
+        .img-absen { width: 50px; height: 50px; object-fit: cover; border-radius: 4px; border: 1px solid #ddd; }
+    </style>
+</head>
+<body>
+
+    <div id="loading" class="loading-overlay">
+        <div class="spinner"></div>
+        <p style="font-weight: bold; color: #555;">Memproses Data...</p>
+    </div>
+
+    <div class="overlay" id="overlay" onclick="toggleMenu()"></div>
+
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">Main Menu</div>
+        <div class="sidebar-item" onclick="showTab('tab-home')"><i class="fas fa-home"></i> BERANDA</div>
+        <div class="sidebar-item" onclick="showTab('tab-pelajaran')"><i class="fas fa-book"></i> ABSEN PELAJARAN</div>
+        <div class="sidebar-item" onclick="showTab('tab-harian')"><i class="fas fa-clock"></i> ABSEN HARIAN</div>
+        
+        <div class="sidebar-header">System</div>
+        <div class="sidebar-item" onclick="logout()" style="color: #ffcccc;">
+            <i class="fas fa-sign-out-alt"></i> LOG OUT
+        </div>
+    </div>
+
+    <div class="top-header">SISTEM ABSENSI SMKN TAMBAKBOYO</div>
+
+    <div class="navbar">
+        <div class="menu-icon" onclick="toggleMenu()"><i class="fas fa-bars"></i></div>
+        <div class="profile-pic">
+            <img src="smkntambakboyo.png" onerror="this.src='https://via.placeholder.com/150'">
+        </div>
+    </div>
+
+    <div class="main-content">
+        
+        <div id="tab-home" class="tab-content active">
+            <div class="card">
+                <div class="card-body" style="text-align: center; padding: 40px 20px;">
+                    <i class="fas fa-user-circle" style="font-size: 50px; color: #4da1c9; margin-bottom: 15px;"></i>
+                    <h2>Selamat Datang</h2>
+                    <p style="color: #777; margin-top: 10px;">Silakan buka menu samping untuk mulai melakukan absensi.</p>
+                </div>
+            </div>
+        </div>
+
+        <div id="tab-pelajaran" class="tab-content">
+            <div class="card">
+                <div class="card-header">Entry Absen Pelajaran</div>
+                <div class="card-body">
+                    <form id="formPelajaran">
+                        <div class="form-group">
+                            <label>MATA PELAJARAN</label>
+                            <select id="mapel">
+                                <option value="">-- PILIH MATA PELAJARAN --</option>
+                                <option>Matematika</option>
+                                <option>Bahasa Indonesia</option>
+                                <option>Web Programming</option>
+                                <option>Sejarah</option>
+                                <option>Pjok</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>DURASI</label>
+                            <input type="text" id="durasi" placeholder="Contoh: 2 Jam">
+                        </div>
+                        <div class="form-group">
+                            <label>BUKTI FOTO</label>
+                            <input type="file" id="fotoPelajaran" accept="image/*" capture="user">
+                        </div>
+                        <button type="button" class="btn btn-simpan" onclick="simpanAbsen('PELAJARAN')">SIMPAN ABSEN PELAJARAN</button>
+                    </form>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header">
+                    <span>Data Absensi Pelajaran</span>
+                    <button class="btn btn-hapus" onclick="hapusData('PELAJARAN')"><i class="fas fa-trash"></i> Hapus Semua</button>
+                </div>
+                <div class="card-body">
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>FOTO</th>
+                                    <th>MATA PELAJARAN</th>
+                                    <th>DURASI</th>
+                                    <th>STATUS</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabelPelajaranBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="tab-harian" class="tab-content">
+            <div class="card">
+                <div class="card-header">Entry Absen Harian</div>
+                <div class="card-body">
+                    <form id="formHarian">
+                        <div class="form-group">
+                            <label>BUKTI FOTO SELFIE</label>
+                            <input type="file" id="fotoHarian" accept="image/*" capture="user">
+                        </div>
+                        <div class="btn-group">
+                            <button type="button" class="btn btn-masuk" onclick="simpanAbsen('HARIAN', 'MASUK')">ABSEN MASUK</button>
+                            <button type="button" class="btn btn-pulang" onclick="simpanAbsen('HARIAN', 'PULANG')">ABSEN PULANG</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header">
+                    <span>Data Absensi Harian</span>
+                    <button class="btn btn-hapus" onclick="hapusData('HARIAN')"><i class="fas fa-trash"></i> Hapus Semua</button>
+                </div>
+                <div class="card-body">
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>FOTO</th>
+                                    <th>KETERANGAN</th>
+                                    <th>WAKTU</th>
+                                    <th>STATUS</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabelHarianBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        window.onload = function() {
+            tampilkanData();
+        };
+
+        function showTab(tabId) {
+            const tabs = document.getElementsByClassName('tab-content');
+            for (let i = 0; i < tabs.length; i++) {
+                tabs[i].classList.remove('active');
+            }
+            document.getElementById(tabId).classList.add('active');
+            if(window.innerWidth < 768) toggleMenu();
+        }
+
+        function toggleMenu() {
+            document.getElementById('sidebar').classList.toggle('active');
+            document.getElementById('overlay').classList.toggle('active');
+        }
+
+        // FUNGSI LOGOUT KE HALAMAN LOGIN
+        function logout() {
+            if (confirm("Yakin ingin keluar?")) {
+                window.location.href = "login.html"; 
+            }
+        }
+
+        function simpanAbsen(jenis, statusHarian = '') {
+            const loading = document.getElementById('loading');
+            const fileInput = (jenis === 'PELAJARAN') ? document.getElementById('fotoPelajaran') : document.getElementById('fotoHarian');
+            const file = fileInput.files[0];
+
+            if (jenis === 'PELAJARAN') {
+                if (!document.getElementById('mapel').value || !document.getElementById('durasi').value || !file) {
+                    alert("Lengkapi Mapel, Durasi, dan Foto!"); 
+                    return;
+                }
+            } else {
+                if (!file) {
+                    alert("Ambil foto terlebih dahulu!"); 
+                    return;
+                }
+            }
+
+            loading.style.display = 'flex';
+
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = function(e) {
+                const img = new Image();
+                img.src = e.target.result;
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    const MAX_WIDTH = 400; 
+                    const scaleSize = MAX_WIDTH / img.width;
+                    canvas.width = MAX_WIDTH;
+                    canvas.height = img.height * scaleSize;
+
+                    const ctx = canvas.getContext('2d'); 
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+                    const fotoKompres = canvas.toDataURL('image/jpeg', 0.6);
+
+                    try {
+                        const waktuSekarang = new Date().toLocaleTimeString('id-ID');
+                        let dataLokal = JSON.parse(localStorage.getItem('dataAbsensi_SMKN')) || [];
+                        
+                        const dataBaru = {
+                            jenis: jenis,
+                            foto: fotoKompres,
+                            keterangan: (jenis === 'PELAJARAN') ? document.getElementById('mapel').value : "Absen Harian",
+                            waktu: (jenis === 'PELAJARAN') ? document.getElementById('durasi').value : waktuSekarang,
+                            status: (jenis === 'PELAJARAN') ? "HADIR" : statusHarian
+                        };
+
+                        dataLokal.unshift(dataBaru);
+                        if (dataLokal.length > 25) dataLokal.pop();
+
+                        localStorage.setItem('dataAbsensi_SMKN', JSON.stringify(dataLokal));
+
+                        setTimeout(() => {
+                            loading.style.display = 'none';
+                            tampilkanData();
+                            if(jenis === 'PELAJARAN') document.getElementById('formPelajaran').reset();
+                            else document.getElementById('formHarian').reset();
+                            alert("Absen Berhasil Disimpan!");
+                        }, 500);
+
+                    } catch (err) {
+                        loading.style.display = 'none';
+                        alert("Gagal Simpan! Memori penuh, silakan hapus data lama.");
+                    }
+                };
+            };
+        }
+
+        function tampilkanData() {
+            const harianBody = document.getElementById('tabelHarianBody');
+            const pelajaranBody = document.getElementById('tabelPelajaranBody');
+            const dataLokal = JSON.parse(localStorage.getItem('dataAbsensi_SMKN')) || [];
+            
+            harianBody.innerHTML = '';
+            pelajaranBody.innerHTML = '';
+
+            dataLokal.forEach(item => {
+                let color = "blue";
+                if(item.status === 'MASUK') color = "green";
+                if(item.status === 'PULANG') color = "red";
+                if(item.status === 'HADIR') color = "#1bad60";
+
+                const row = `<tr>
+                    <td><img src="${item.foto}" class="img-absen"></td>
+                    <td><b>${item.keterangan || '-'}</b></td>
+                    <td>${item.waktu || '-'}</td>
+                    <td><span style="color:${color}; font-weight:bold;">${item.status || '-'}</span></td>
+                </tr>`;
+
+                if(item.jenis === 'HARIAN') {
+                    harianBody.innerHTML += row;
+                } else if(item.jenis === 'PELAJARAN') {
+                    pelajaranBody.innerHTML += row;
+                }
+            });
+
+            if (harianBody.innerHTML === '') harianBody.innerHTML = '<tr><td colspan="4">Belum ada absen harian</td></tr>';
+            if (pelajaranBody.innerHTML === '') pelajaranBody.innerHTML = '<tr><td colspan="4">Belum ada absen pelajaran</td></tr>';
+        }
+
+        // FUNGSI HAPUS DATA YANG SUDAH DIPERBAIKI
+        function hapusData(jenis) {
+            const label = (jenis === 'PELAJARAN') ? 'Absen Pelajaran' : 'Absen Harian';
+            if (confirm(`Hapus semua riwayat ${label}?`)) {
+                let dataLokal = JSON.parse(localStorage.getItem('dataAbsensi_SMKN')) || [];
+                let dataSisa = dataLokal.filter(item => item.jenis !== jenis);
+                
+                localStorage.setItem('dataAbsensi_SMKN', JSON.stringify(dataSisa));
+                tampilkanData();
+                alert(`Data ${label} berhasil dihapus!`);
+            }
+        }
+    </script>
+</body>
+</html>
